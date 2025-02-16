@@ -1,0 +1,29 @@
+#Llamado de datos
+#Creador: Camila Guevara
+install.packages("pacman")
+#Llamar otros paquetes y si no los tengo los va instalar.
+library("pacman")
+p_load("readr")
+Datos_PCR <- read.csv(file = "https://raw.githubusercontent.com/ManuelLaraMVZ/Transcriptmica/refs/heads/main/Resultados_tiempo_real.csv")
+View(Datos_PCR)
+head(Datos_PCR)
+p_load("dplyr") #facilita el manejo de los datos
+Tabla_filtrada <- Datos_PCR %>% #crea una base de datos a apartir de datos PCR y a esa base de
+datos haz lo siguiente
+select("Ciclos","P14")
+head (Tabla_filtrada)
+p_load("ggplot2")
+Grafica_1 <- # Crear la gráfica
+ ggplot(Tabla_filtrada, aes(x = Ciclos, y = P14)) +
+ geom_line(color = "#800080") + # Línea azul
+ geom_point(color = "#FFFF00") + # Puntos rojos en cada ciclo
+ labs(title = "Curva de amplificación del Bulbo raquideo",
+ Subtitle= "Creado por: Camila Guevara",
+ Caption= "Fecha: 14 de feb de 2025",
+ x = "Ciclos",
+ y = "Fluorescencia") +
+ theme_minimal()
+Grafica_1
+g
+ggsave(Grafica_1,plot="P14.jpeg",
+ width=6,length=4)
