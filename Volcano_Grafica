@@ -1,0 +1,118 @@
+---
+title: "Grafica_26 feb"
+output:
+  pdf_document: default
+  html_document: default
+date: "2025-02-26"
+---
+
+
+```{r}
+#install.packages("pacman")
+library("pacman")
+p_load("readr", 
+       "dplyr",
+       "ggplot2",
+       "ggrepel",
+       "matrixTests")
+```
+
+```{r}
+PCR <- read.csv(file="https://raw.githubusercontent.com/ManuelLaraMVZ/Transcript-mica/main/datos_miRNAs.csv")
+head(PCR)
+```
+```{r}
+PCR <- read.csv(file="https://raw.githubusercontent.com/ManuelLaraMVZ/Transcript-mica/main/datos_miRNAs.csv")
+head(PCR)
+```
+
+```{r}
+PCR <- read.csv(file="https://raw.githubusercontent.com/ManuelLaraMVZ/Transcript-mica/main/datos_miRNAs.csv")
+head(PCR)
+```
+```{r}
+Gen_ref <- PCR %>%
+filter(Condicion == "Control") %>% select(-2) 
+Gen_ref
+```
+
+
+```{r}
+Gen_int <- PCR %>%
+filter(Condicion == "Target") %>% select(-2)
+head(Gen_int)
+```
+
+
+Correr los promedios de cada columna de los genes control
+```{r}
+meanCx1 <- mean(Gen_ref$Cx1)
+meanCx2 <- mean(Gen_ref$Cx2)
+meanCx3 <- mean(Gen_ref$Cx3)
+meanT1 <- mean(Gen_ref$T1)
+meanT2 <- mean(Gen_ref$T2)
+meanT3 <- mean(Gen_ref$T3)
+```
+
+Sacar el Delta Ct de cada columna de los genes de interes
+
+```{r}
+DCt <- Gen_int %>% 
+  mutate(DCT_Cx1 = Cx1-meanCx1,
+         DCT_Cx2 = Cx2-meanCx2,
+         DCT_Cx3 = Cx3-meanCx3,
+         DCT_T1 = T1-meanT1,
+         DCT_T2 = T2-meanT2,
+         DCT_T3 = T3-meanT3) %>%
+  select(-2,-3,-4,-5,-6,-7)
+DCt
+  
+
+```
+```{r}
+DosDCt <- DCt %>% 
+  mutate (A = 2^-(DCT_Cx1), B = 2^-(DCT_Cx2),
+          C = 2^-(DCT_Cx3), D = 2^-(DCT_T1),
+          E = 2^-(DCT_T2), F = 2^-(DCT_T3)) %>% 
+  select (-2:-7)
+DosDCt
+          
+```
+
+Estadistica para obtener los valores de p, hacemos t de Student.
+
+```{r}
+tStudent <- row_t_welch(DosDCt[,c("A","B","C")],
+                        DosDCt[,c("D","E","F")])
+tStudent 
+```
+Recuperar el valor de P para cada gen.
+
+```{r}
+PValue <- DosDCt %>% 
+  mutate(PV = tStudent$pvalue,
+         LPV = -log10 (PV)) %>% 
+  select(1,"PV","LPV")
+
+PValue
+```
+Obtener el valor de Dos Delta CT
+
+```{r}
+DosDDCT <- DosDCt %>% 
+  mutate(mean_DosDCT_Cx = (A+B+C)/3,
+         mean_DosDCT_Tx = (D+E+F)/3,
+         DosDDCT = mean_DosDCT_Tx/mean_DosDCT_Cx,
+         L2DDCt = log2 (DosDDCT)) %>% #Para la grafica necesito log2 de DosDDCT 
+  select (-2:-7)
+DosDDCT 
+```
+
+Grafica
+
+```{r}
+V_plot <- ggplot(mapping =aes (x=DosDDCT$L2DDCt,
+                               y= PValue$LPV))+
+  geom_point()
+V_plot
+```
